@@ -30,7 +30,7 @@ from sklearn.model_selection import KFold, cross_val_score,train_test_split
 
 class SalesForecastRegressor:
     #retrieve the latest version of the model from the BentoML model store
-    bento_model = bentoml.models.get("store_forecast_v1:latest")
+    bento_model = bentoml.models.get("store_forecast_v2:latest")
     #bento_model = BentoModel('mental_health_v1:q5kcqtf5ys3qoaav')
 
 
@@ -42,6 +42,8 @@ class SalesForecastRegressor:
         train_df = pd.read_csv(path/'train.csv')
         test_df = pd.read_csv(path/'test.csv')
         sub_df = pd.read_csv(path/'sample_submission.csv')
+        train_df = add_datepart(train_df,'date',drop=False)
+        test_df = add_datepart(test_df,'date',drop=False)
         cont_names,cat_names = cont_cat_split(train_df, dep_var='sales')
         splits = RandomSplitter(valid_pct=0.2)(range_of(train_df))
         to = TabularPandas(train_df, procs=[Categorify, FillMissing,Normalize],
@@ -74,6 +76,7 @@ class SalesForecastRegressor:
     @bentoml.api
     def predict(self, data:pd.DataFrame) -> np.ndarray:
         data = self.preprocess(data)
+        data = add_datepart(data,'date',drop=False)
       # data = preprocess(data)
 
 
@@ -102,6 +105,7 @@ class SalesForecastRegressor:
     @bentoml.api()
     def predict_csv(self,csv:Path) -> np.ndarray:
         csv_data = pd.read_csv(csv)
+        csv_data = add_datepart(csv_data,'date',drop=False)
         csv_data = self.preprocess(csv_data)
         prediction_csv = self.model.predict(csv_data)
         return prediction_csv

@@ -22,6 +22,7 @@ import typing as t
 import bentoml
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.model_selection import KFold, cross_val_score,train_test_split
+from catboost import CatBoostRegressor,Pool, metrics, cv
 #import wandb
 
 
@@ -33,6 +34,8 @@ path = Path('data/')
 train_df = pd.read_csv(path/'train.csv')
 test_df = pd.read_csv(path/'test.csv')
 sub_df = pd.read_csv(path/'sample_submission.csv')
+train_df = add_datepart(train_df,'date',drop=False)
+test_df = add_datepart(test_df,'date',drop=False)
 cont_names,cat_names = cont_cat_split(train_df, dep_var='sales')
 splits = RandomSplitter(valid_pct=0.2)(range_of(train_df))
 to = TabularPandas(train_df, procs=[Categorify, FillMissing,Normalize],
@@ -59,4 +62,4 @@ xgb_model = xgb_model.fit(X_train, y_train)
 #xgb_score = mean_absolute_percentage_error(y_test,xgb_preds_x)
 #print(f"Model accuracy: {xgb_score}")
 
-bentoml.xgboost.save_model("store_forecast_v1", xgb_model)
+bentoml.xgboost.save_model("store_forecast_v2", xgb_model)
